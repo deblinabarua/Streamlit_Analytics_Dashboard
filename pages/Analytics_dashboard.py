@@ -71,10 +71,10 @@ slug = st.text_input("Enter a service: ")
 if slug:
     get_data = requests.get(f"https://isitdownstatus.com/api/v1/status/{slug}").json()
 
-col1, col2, col3 = st.columns(3)
-col1.metric("Current Status", get_data["data"]["status"].upper())
-col2.metric("Number of Reports in the Last Hour", get_data["data"]["report_count_1h"])
-col3.metric("Number of Reports in Last 24 Hours", get_data["data"]["report_count_24h"])    
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Current Status", get_data["data"]["status"].upper())
+    col2.metric("Number of Reports in the Last Hour", get_data["data"]["report_count_1h"])
+    col3.metric("Number of Reports in Last 24 Hours", get_data["data"]["report_count_24h"])    
 
 get_service_data = requests.get(f"https://isitdownstatus.com/api/v1/services").json()
 df = pd.DataFrame(get_service_data["data"])
