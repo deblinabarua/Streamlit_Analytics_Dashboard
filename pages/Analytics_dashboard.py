@@ -1,3 +1,4 @@
+'''
 import streamlit as st
 import kagglehub
 
@@ -57,3 +58,46 @@ st.dataframe(top)
 
 st.subheader("Weather Relationships")
 st.dataframe(filtered.corr(numeric_only = True))
+'''
+import streamlit as st
+import requests
+import pandas as pd
+
+if "user" not in st.session_state:
+    st.error("Please login first.")
+    st.stop()
+
+slug = st.text_input("Enter a service: ")
+if slug:
+    get_data = requests.get(f"https://isitdownstatus.com/api/v1/status/{slug}").json()
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Current Status", get_data["data"]["status"].upper())
+col2.metric("Number of Reports in the Last Hour", get_data["data"]["report_count_1h"])
+col3.metric("Number of Reports in Last 24 Hours", get_data["data"]["report_count_24h"])    
+
+get_service_data = requests.get(f"https://isitdownstatus.com/api/v1/services").json()
+df = pd.DataFrame(get_service_data["data"])
+
+status_counts = df["status"].value_counts()
+st.bar_chart(status_counts)
+
+category = df["category"].value_counts()
+st.bar_chart(category)
+
+top_bad_service = df.sort_values("report_count_24h", ascending = False).head(10)
+
+st.dataframe(top_bad_service[["name", "report_count_24h"]])
+
+get_outage_data = requests.get(f"https://isitdownstatus.com/api/v1/outages").json()
+outages = pd.DataFrame(get_outage_data["data"])
+col1, col2, col3 = st.columns(3)
+col1.metric("Active Outages", len(outages))
+col2.metric("Peak Reports", outages["peak_reports"].max())
+col3.metric("Average Reports", outages["peak_reports"].mean())
+
+top_affected = outages.groupby(outages["service"].apply(lambda x : x["name"])).size()
+st.bar_chart(top_affected)
+
+src = outages["source"].value_counts()
+st.bar_chart(src)

@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import DateTime, ForeignKey
 
 DATABASE_URL = "postgresql://postgres:Deblina@localhost/mydb"
@@ -26,6 +26,6 @@ class Login_logs(Base):
     __tablename__ = "Login_logs"
     id: Mapped[int] = mapped_column(primary_key = True, autoincrement = True)
     user_id: Mapped[int] = mapped_column(ForeignKey("Registration.id"), nullable = False)
-    login_time: Mapped[datetime] = mapped_column(DateTime, default = datetime.now)
+    login_time: Mapped[datetime] = mapped_column(DateTime, default = lambda: datetime.now(timezone.utc))
 
 Base.metadata.create_all(engine)
