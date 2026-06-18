@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import pandas as pd
+import altair as alt
 
 @st.cache_data(ttl = 30)
 def fetch_api(url):
@@ -93,10 +94,39 @@ with col3:
 chart_data = {"Status": ["Operational", "Degraded", "Down"], "Count": [len(operational_service.get("data")), len(degraded_service.get("data")), len(down_service.get("data"))]}
 df = pd.DataFrame(chart_data)
 
+chart = (
+    alt.Chart(df)
+    .mark_bar()
+    .encode(
+        x=alt.X(
+            "Status:N"
+        ),
+
+        y=alt.Y(
+            "Count:Q",
+            scale=alt.Scale(
+                domain=[
+                    0,
+                    df["Count"].max()
+                ]
+            )
+        )
+    )
+)
 
 col1, col2 = st.columns([2, 1])
+
 with col1:
-    st.bar_chart(df, x = "Status", y = "Count")
+
+    st.altair_chart(
+        chart,
+        use_container_width=True
+    )
 
 with col2:
-    st.metric("Total Services", df["Count"].sum())
+
+    st.metric(
+        "Total Services",
+        df["Count"].sum()
+    )
+
