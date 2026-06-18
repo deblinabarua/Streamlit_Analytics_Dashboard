@@ -55,7 +55,9 @@ try:
 except:
     pass
 
-select_category = st.selectbox("Category", category_list)
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    select_category = st.selectbox("Category", category_list)
 
 with st.spinner("Please wait."):
     down_service = fetch_api(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=down&limit=500")
