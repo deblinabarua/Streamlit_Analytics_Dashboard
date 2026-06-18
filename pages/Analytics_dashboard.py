@@ -1,6 +1,15 @@
 import streamlit as st
 import requests
 
+@st.cache_data(ttl = 30)
+def fetch_api(url):
+    try:
+        response = requests.get(url, timeout = 10)
+        response.raise_for_status()
+        return response.json()
+    except Exception:
+        return {"data":[]}
+
 st.set_page_config(
     initial_sidebar_state="collapsed",
     layout = "wide"
@@ -27,7 +36,7 @@ if "user" not in st.session_state:
 col1, col2 = st.columns([5,1])
 with col1:
     st.title("Service Check Dashboard")
-    st.write(f"Hello, {st.session_state.user["name"]}")
+    st.write(f"Hello, {st.session_state.user['name']}")
 
 with col2:
     if st.button("Logout"):
@@ -36,7 +45,7 @@ with col2:
 
 category_list = ["ai", "banking", "cloud", "crypto", "dating", "ecommerce", "education", "email", "finance", "fitness", "food", "gambling", "gaming", "messaging", "other", "payment", "productivity", "shipping", "social", "streaming", "telecom", "travel", "vpn"]
 try:
-    get_category = requests.get("https://isitdownstatus.com/api/v1/services?limit=500").json()
+    get_category = fetch_api("https://isitdownstatus.com/api/v1/services?limit=500")
     category_generate = {x.get("category") for x in get_category["data"] if x.get("category")} #set removes duplicates
     category_list = sorted(set(category_list) | category_generate) #| means union
 except:
@@ -44,15 +53,16 @@ except:
 
 select_category = st.selectbox("Category", category_list)
 
-down_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=down&limit=500").json()
-degraded_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=degraded&limit=500").json()
-operational_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=operational&limit=500").json()
+with st.spinner("Please wait."):
+    down_service = fetch_api(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=down&limit=500")
+    degraded_service = fetch_api(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=degraded&limit=500")
+    operational_service = fetch_api(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=operational&limit=500")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("Operational")
-    if len(operational_service["data"]):
+    if len(operational_service.get("data")):
         for service in operational_service["data"]:
             st.write(service["name"])
     else:
@@ -60,7 +70,7 @@ with col1:
 
 with col2:
     st.subheader("Degraged")
-    if len(degraded_service["data"]):
+    if len(degraded_service.get("data")):
         for service in degraded_service["data"]:
             st.write(service["name"])
     else:
@@ -68,7 +78,7 @@ with col2:
 
 with col3:
     st.subheader("Down")
-    if len(down_service["data"]):
+    if len(down_service.get("data")):
         for service in down_service["data"]:
             st.write(service["name"])
     else:
