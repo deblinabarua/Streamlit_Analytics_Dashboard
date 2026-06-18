@@ -1,67 +1,24 @@
-'''
-import streamlit as st
-import kagglehub
-
-from kagglehub import KaggleDatasetAdapter
-
-if "user" not in st.session_state:
-    st.error("Please login first.")
-    st.stop()
-
-@st.cache_data
-def load_data():
-
-    return (
-        kagglehub.load_dataset(
-
-            KaggleDatasetAdapter.PANDAS,
-
-            "rupsarroy/rainfall-dataset-uttar-pradesh-20052025",
-
-            "UP_rainfall_dataset.csv"
-
-        )
-    )
-
-df = load_data()
-col1, col2 = st.columns([5,1])
-with col1:
-    st.title("Uttar Pradesh Rainfall Analytics Dashboard")
-    st.write(f"Hello, {st.session_state.user["name"]}")
-
-with col2:
-    if st.button("Logout"):
-        st.session_state.clear()
-        st.switch_page("Analytics_front.py")
-
-
-
-year = st.selectbox("Select Year", sorted(df["YEAR"].unique()))
-month = st.selectbox("Select Month", sorted(df["MO"].unique()))
-filtered = df[(df["YEAR"] == year) & (df["MO"] == month)]
-
-col1, col2, col3 = st.columns(3)
-col1.metric("Avg Rainfall", round(filtered["PRECTOTCORR"].mean(), 2))
-col2.metric("Avg Humidity", round(filtered["RH2M"].mean(), 1))
-col3.metric("Avg Wind", round(filtered["WS50M"].mean(), 1))
-
-st.subheader("Daily Rainfall")
-chart = filtered.set_index("DY")["PRECTOTCORR"]
-st.line_chart(chart)
-
-st.subheader("Pressure")
-st.line_chart(filtered.set_index("DY")["PS"])
-
-st.subheader("Top Rainfall Days")
-top = filtered.sort_values("PRECTOTCORR", ascending = False).head(10)
-st.dataframe(top)
-
-st.subheader("Weather Relationships")
-st.dataframe(filtered.corr(numeric_only = True))
-'''
 import streamlit as st
 import requests
-import pandas as pd
+
+st.set_page_config(
+    initial_sidebar_state="collapsed",
+    layout = "wide"
+)
+
+hide_sidebar = """
+<style>
+    [data-testid = "stSidebar"]{
+        display: none;
+    }
+
+    [data-testid="stSidebarCollapsedControl"] {
+        display: none;
+    }
+</style>
+"""
+
+st.markdown(hide_sidebar, unsafe_allow_html = True)
 
 if "user" not in st.session_state:
     st.error("Please log in first.")
@@ -77,37 +34,42 @@ with col2:
         st.session_state.clear()
         st.switch_page("Analytics_front.py")
 
-slug = st.text_input("Enter a service: ")
-if slug:
-    get_data = requests.get(f"https://isitdownstatus.com/api/v1/status/{slug}").json()
+category_list = ["ai", "banking", "cloud", "crypto", "dating", "ecommerce", "education", "email", "finance", "fitness", "food", "gambling", "gaming", "messaging", "other", "payment", "productivity", "shipping", "social", "streaming", "telecom", "travel", "vpn"]
+try:
+    get_category = requests.get("https://isitdownstatus.com/api/v1/services?limit=500").json()
+    category_generate = {x.get("category") for x in get_category["data"] if x.get("category")} #set removes duplicates
+    category_list = sorted(set(category_list) | category_generate) #| means union
+except:
+    pass
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Current Status", get_data["data"]["status"].upper())
-    col2.metric("Number of Reports in the Last Hour", get_data["data"]["report_count_1h"])
-    col3.metric("Number of Reports in Last 24 Hours", get_data["data"]["report_count_24h"])    
+select_category = st.selectbox("Category", category_list)
 
-get_service_data = requests.get(f"https://isitdownstatus.com/api/v1/services").json()
-df = pd.DataFrame(get_service_data["data"])
+down_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=down&limit=500").json()
+degraded_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=degraded&limit=500").json()
+operational_service = requests.get(f"https://isitdownstatus.com/api/v1/services?category={select_category}&status=operational&limit=500").json()
 
-status_counts = df["status"].value_counts()
-st.bar_chart(status_counts)
-
-category = df["category"].value_counts()
-st.bar_chart(category)
-
-top_bad_service = df.sort_values("report_count_24h", ascending = False).head(10)
-
-st.dataframe(top_bad_service[["name", "report_count_24h"]])
-
-get_outage_data = requests.get(f"https://isitdownstatus.com/api/v1/outages").json()
-outages = pd.DataFrame(get_outage_data["data"])
 col1, col2, col3 = st.columns(3)
-col1.metric("Active Outages", len(outages))
-col2.metric("Peak Reports", outages["peak_reports"].max())
-col3.metric("Average Reports", outages["peak_reports"].mean())
 
-top_affected = outages.groupby(outages["service"].apply(lambda x : x["name"])).size()
-st.bar_chart(top_affected)
+with col1:
+    st.subheader("Operational")
+    if len(operational_service["data"]):
+        for service in operational_service["data"]:
+            st.write(service["name"])
+    else:
+        st.caption("No services")
 
-src = outages["source"].value_counts()
-st.bar_chart(src)
+with col2:
+    st.subheader("Degraged")
+    if len(degraded_service["data"]):
+        for service in degraded_service["data"]:
+            st.write(service["name"])
+    else:
+        st.caption("No services")
+
+with col3:
+    st.subheader("Down")
+    if len(down_service["data"]):
+        for service in down_service["data"]:
+            st.write(service["name"])
+    else:
+        st.caption("No services")
