@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+import pandas as pd
 
 @st.cache_data(ttl = 30)
 def fetch_api(url):
@@ -33,6 +34,8 @@ if "user" not in st.session_state:
     st.error("Please log in first.")
     st.switch_page("Analytics_front.py")
 
+
+
 col1, col2 = st.columns([5,1])
 with col1:
     st.title("Service Check Dashboard")
@@ -62,24 +65,38 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("Operational")
-    if len(operational_service.get("data")):
-        for service in operational_service["data"]:
-            st.write(service["name"])
-    else:
-        st.caption("No services")
+    with st.container(height = 300):  
+        if len(operational_service.get("data")):
+            for service in operational_service["data"]:
+                st.write(service["name"])
+        else:
+            st.caption("No services")
 
 with col2:
     st.subheader("Degraged")
-    if len(degraded_service.get("data")):
-        for service in degraded_service["data"]:
-            st.write(service["name"])
-    else:
-        st.caption("No services")
+    with st.container(height = 300):
+        if len(degraded_service.get("data")):
+            for service in degraded_service["data"]:
+                st.write(service["name"])
+        else:
+            st.caption("No services")
 
 with col3:
     st.subheader("Down")
-    if len(down_service.get("data")):
-        for service in down_service["data"]:
-            st.write(service["name"])
-    else:
-        st.caption("No services")
+    with st.container(height = 300):
+        if len(down_service.get("data")):
+            for service in down_service["data"]:
+                st.write(service["name"])
+        else:
+            st.caption("No services")
+
+chart_data = {"Status": ["Operational", "Degraded", "Down"], "Count": [len(operational_service.get("data")), len(degraded_service.get("data")), len(down_service.get("data"))]}
+df = pd.DataFrame(chart_data)
+
+
+col1, col2 = st.columns([2, 1])
+with col1:
+    st.bar_chart(df, x = "Status", y = "Count")
+
+with col2:
+    st.metric("Total Services", df["Count"].sum())
