@@ -64,8 +64,18 @@ import requests
 import pandas as pd
 
 if "user" not in st.session_state:
-    st.error("Please login first.")
-    st.stop()
+    st.error("Please log in first.")
+    st.switch_page("Analytics_front.py")
+
+col1, col2 = st.columns([5,1])
+with col1:
+    st.title("Service Check Dashboard")
+    st.write(f"Hello, {st.session_state.user["name"]}")
+
+with col2:
+    if st.button("Logout"):
+        st.session_state.clear()
+        st.switch_page("Analytics_front.py")
 
 slug = st.text_input("Enter a service: ")
 if slug:

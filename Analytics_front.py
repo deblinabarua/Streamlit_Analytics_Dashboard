@@ -69,6 +69,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+if "user" in st.session_state:
+    st.error("You are already logged in.")
+    st.switch_page("pages/Analytics_dashboard.py")
+
 st.title("Analytics")
 tab1, tab2, tab3 = st.tabs(["Homepage", "Register", "Login"])
 
