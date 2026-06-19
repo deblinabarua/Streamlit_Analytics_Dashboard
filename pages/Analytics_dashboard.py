@@ -35,11 +35,9 @@ if "user" not in st.session_state:
     st.error("Please log in first.")
     st.switch_page("Analytics_front.py")
 
-
-
 col1, col2 = st.columns([5,1])
 with col1:
-    st.title("Service Check Dashboard")
+    st.title("Check by Category")
     st.write(f"Hello, {st.session_state.user['name']}")
 
 with col2:
@@ -96,39 +94,14 @@ with col3:
 chart_data = {"Status": ["Operational", "Degraded", "Down"], "Count": [len(operational_service.get("data")), len(degraded_service.get("data")), len(down_service.get("data"))]}
 df = pd.DataFrame(chart_data)
 
-chart = (
-    alt.Chart(df)
-    .mark_bar()
-    .encode(
-        x=alt.X(
-            "Status:N"
-        ),
-
-        y=alt.Y(
-            "Count:Q",
-            scale=alt.Scale(
-                domain=[
-                    0,
-                    df["Count"].max()
-                ]
-            )
-        )
-    )
-)
+chart = (alt.Chart(df).mark_bar().encode(x = alt.X("Status:N"), y = alt.Y("Count:Q", scale = alt.Scale(domain = [0, df["Count"].max()]))))
 
 col1, col2 = st.columns([2, 1])
 
 with col1:
 
-    st.altair_chart(
-        chart,
-        use_container_width=True
-    )
+    st.altair_chart(chart.properties(width = "container"), use_container_width = True)
 
 with col2:
 
-    st.metric(
-        "Total Services",
-        df["Count"].sum()
-    )
-
+    st.metric("Total Services", df["Count"].sum())
