@@ -100,7 +100,7 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
 
-    st.altair_chart(chart.properties(width = "container"), use_container_width = True)
+    st.altair_chart(chart, use_container_width = True)
 
 with col2:
 
