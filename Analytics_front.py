@@ -70,23 +70,11 @@ st.set_page_config(
     layout = "wide"
 )
 
-hide_sidebar = """
-<style>
-    [data-testid = "stSidebar"]{
-        display: none;
-    }
+if st.session_state.get("logged_in"):
+    redirect = st.session_state.get("last_page", "Analytics_front.py")
+    st.switch_page(redirect)
 
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none;
-    }
-</style>
-"""
 
-st.markdown(hide_sidebar, unsafe_allow_html = True)
-
-if "user" in st.session_state:
-    st.error("You are already logged in.")
-    st.switch_page("pages/Analytics_dashboard.py")
 
 
 st.title("Analytics", text_alignment = "center")
@@ -142,4 +130,5 @@ with tab3:
                     log = Login_logs(user_id = person.id)
                     db.add(log)
                     db.commit()
-                    st.switch_page("pages/Analytics_dashboard.py")
+                    target = st.session_state.get("next_page", "pages/Analytics_dashboard.py")
+                    st.switch_page(target)

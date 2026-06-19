@@ -2,38 +2,18 @@ import streamlit as st
 import requests
 import pandas as pd
 import altair as alt
+from utils import fetch_api, require_login
 
-@st.cache_data(ttl = 30)
-def fetch_api(url):
-    try:
-        response = requests.get(url, timeout = 10)
-        response.raise_for_status()
-        return response.json()
-    except Exception:
-        return {"data":[]}
+require_login("pages/Analytics_dashboard.py")
 
 st.set_page_config(
     initial_sidebar_state="collapsed",
     layout = "wide"
 )
 
-hide_sidebar = """
-<style>
-    [data-testid = "stSidebar"]{
-        display: none;
-    }
+st.session_state["last_page"] = "pages/Analytics_dashboard.py"
 
-    [data-testid="stSidebarCollapsedControl"] {
-        display: none;
-    }
-</style>
-"""
 
-st.markdown(hide_sidebar, unsafe_allow_html = True)
-
-if "user" not in st.session_state:
-    st.error("Please log in first.")
-    st.switch_page("Analytics_front.py")
 
 col1, col2 = st.columns([5,1])
 with col1:
